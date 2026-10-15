@@ -21,6 +21,9 @@ from Zapret_backend.f02_strategy import strategies_in
 from Zapret_backend.f03_auto_strategy import Selection, choose_best, TestCancellation, TestCancelled
 from Zapret_backend.f04_update import install_release, latest_release
 from Zapret_backend.version_store import latest_installation, version_key
+from Zapret_backend.f06_ui import bind_filter_inspection
+from Zapret_backend.f07_ui import bind_diagnostics
+from Zapret_backend.f08_ui import bind_traffic
 
 BASE = Path(__file__).resolve().parent
 
@@ -70,6 +73,17 @@ class ControlWindow(QObject):
             raise RuntimeError(f"Unable to open UI: {ui_path}: {file.errorString()}")
         try:
             self.window = loader.load(file)
+            # В ControlWindow.__init__, после создания self.window:
+            self.f06_inspection = bind_filter_inspection(
+                self.window,
+                lambda: ZAPRET_DIR
+            )
+            self.f07_ui = bind_diagnostics(
+                self.window,
+                lambda: ZAPRET_DIR
+            )
+
+            self.f08_ui = bind_traffic(self.window)
         finally:
             file.close()
         if self.window is None:

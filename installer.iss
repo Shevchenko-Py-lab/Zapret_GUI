@@ -3,7 +3,7 @@
 ; Build with Inno Setup Compiler or ISCC.exe installer.iss
 
 #define MyAppName "Zapret Control"
-#define MyAppVersion "0.8.1"
+#define MyAppVersion "1.0"
 #define MyAppPublisher "Zapret Control"
 #define MyAppExeName "ZapretControl.exe"
 

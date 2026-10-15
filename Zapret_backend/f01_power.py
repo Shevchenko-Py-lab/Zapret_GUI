@@ -1,7 +1,6 @@
-"""F-01: manage the winws executable belonging to one zapret installation.
+"""F-01: control one installed winws executable, with startup diagnostics.
 
-Requires psutil. No global taskkill by image name: only exact bin/winws.exe
-paths are considered. Windows service instances are stopped through SCM.
+Requires psutil. Does not elevate permissions automatically or kill winws globally.
 """
 from __future__ import annotations
 
@@ -9,9 +8,12 @@ import os
 from pathlib import Path
 import subprocess
 import sys
+import tempfile
 import time
 
 import psutil
+
+START_TIMEOUT = 15.0
 
 
 class PowerController:
@@ -21,6 +23,7 @@ class PowerController:
         self.root = self.start_file.parent
         self.winws = self.root / 'bin' / 'winws.exe'
         self.process: subprocess.Popen | None = None
+        self.last_log: Path | None = None
         if not self.start_file.is_file():
             raise FileNotFoundError(self.start_file)
         if not self.winws.is_file():
@@ -35,7 +38,6 @@ class PowerController:
         return [str(path)]
 
     def _instances(self) -> list[psutil.Process]:
-        """Find only processes using this specific installed winws executable."""
         wanted = os.path.normcase(os.path.normpath(str(self.winws)))
         found = []
         for proc in psutil.process_iter(['pid', 'name', 'exe']):
@@ -48,13 +50,47 @@ class PowerController:
             except (psutil.NoSuchProcess, psutil.ZombieProcess):
                 continue
             except psutil.AccessDenied as exc:
-                raise PermissionError(f'Нет доступа к сведениям о winws PID {proc.pid}') from exc
+                raise PermissionError(
+                    f'Нет доступа к сведениям о winws PID {proc.pid}. '
+                    'Проверь, с какими правами запущен Zapret Control.'
+                ) from exc
         return found
 
     def is_running(self) -> bool:
         return bool(self._instances())
 
-    def start(self) -> None:
+    def _startup_error(self, elapsed: float) -> RuntimeError:
+        notes = [f'BAT запущен, но нужный winws.exe не обнаружен за {elapsed:.0f} секунд.',
+                 f'BAT: {self.start_file}', f'Ожидаемый EXE: {self.winws}']
+        if self.process is not None:
+            code = self.process.poll()
+            notes.append('BAT завершился, код: ' + str(code) if code is not None
+                         else 'BAT всё ещё выполняется (возможно, ожидает ввода).')
+        other = []
+        for proc in psutil.process_iter(['pid', 'name', 'exe']):
+            try:
+                if (proc.info['name'] or '').lower() == 'winws.exe':
+                    other.append(f"PID {proc.pid}: {proc.info.get('exe') or 'путь недоступен'}")
+            except (psutil.NoSuchProcess, psutil.ZombieProcess, psutil.AccessDenied):
+                continue
+        if other:
+            notes.append('Найдены winws.exe (возможно, из другой папки): ' + '; '.join(other[:5]))
+        else:
+            notes.append('В системе не найден видимый процесс winws.exe.')
+        if self.last_log and self.last_log.is_file():
+            try:
+                content = self.last_log.read_bytes()[-5000:]
+                output = content.decode('utf-8', errors='replace').strip()
+                if output:
+                    notes.append('Последний вывод BAT:\n' + output[-2500:])
+            except OSError:
+                pass
+            notes.append(f'Лог запуска: {self.last_log}')
+        notes.append('Попробуй вручную запустить этот BAT из каталога zapret; '
+                     'проверь ошибки WinDivert, блокировки антивируса и права.')
+        return RuntimeError('\n'.join(notes))
+
+    def start(self, timeout: float = START_TIMEOUT) -> None:
         if self.is_running():
             raise RuntimeError('winws.exe из этой версии zapret уже работает')
         kwargs = {'cwd': str(self.root), 'stdin': subprocess.DEVNULL}
@@ -62,14 +98,30 @@ class PowerController:
             kwargs['creationflags'] = subprocess.CREATE_NEW_PROCESS_GROUP
         else:
             kwargs['start_new_session'] = True
-        self.process = subprocess.Popen(self._command(self.start_file), **kwargs)
-        # Let the BAT launch the real executable. Do not claim success from Popen alone.
-        deadline = time.monotonic() + 6
+        # Redirect BAT output to a file rather than PIPE: some launchers leave
+        # stdout inherited by children, which could otherwise block the caller.
+        fd, path = tempfile.mkstemp(prefix='zapret_start_', suffix='.log')
+        self.last_log = Path(path)
+        try:
+            with os.fdopen(fd, 'wb') as output:
+                self.process = subprocess.Popen(self._command(self.start_file),
+                                                stdout=output, stderr=subprocess.STDOUT,
+                                                **kwargs)
+        except Exception:
+            try:
+                self.last_log.unlink(missing_ok=True)
+            except OSError:
+                pass
+            raise
+        deadline = time.monotonic() + timeout
         while time.monotonic() < deadline:
             if self.is_running():
                 return
-            time.sleep(0.2)
-        raise RuntimeError('BAT был запущен, но winws.exe не обнаружен за 6 секунд')
+            time.sleep(0.25)
+        # One last check after deadline (process might appear at boundary).
+        if self.is_running():
+            return
+        raise self._startup_error(timeout)
 
     def _running_services(self, pids: set[int]) -> list[str]:
         if os.name != 'nt':
