@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# PyCharm
+.idea/
+
+# PyInstaller
+build/
+dist/
+*.spec
+
+# Inno Setup
+installer_output/
+
+# Zapret distributions
+Zapret_dir/
+
+# Logs and temporary files
+*.log
+*.tmp
+*.bak
+
+# Test caches
+.pytest_cache/
+.coverage

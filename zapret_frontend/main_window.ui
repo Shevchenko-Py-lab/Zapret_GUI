@@ -1,0 +1,596 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<ui version="4.0">
+  <class>MainWindow</class>
+  <widget class="QMainWindow" name="MainWindow">
+    <property name="geometry">
+      <rect>
+        <x>0</x>
+        <y>0</y>
+        <width>900</width>
+        <height>760</height>
+      </rect>
+    </property>
+    <property name="windowTitle">
+      <string>Zapret Control</string>
+    </property>
+    <property name="minimumSize">
+      <size><width>760</width><height>700</height></size></property>
+    <widget class="QWidget" name="centralwidget">
+      <layout class="QVBoxLayout" name="mainLayout">
+        <property name="leftMargin">
+          <number>22</number>
+        </property>
+        <property name="topMargin">
+          <number>22</number>
+        </property>
+        <property name="rightMargin">
+          <number>22</number>
+        </property>
+        <property name="bottomMargin">
+          <number>22</number>
+        </property>
+        <property name="spacing">
+          <number>14</number>
+        </property>
+        <item>
+          <widget class="QWidget" name="headerWidget">
+            <layout class="QHBoxLayout" name="headerLayout">
+              <property name="leftMargin">
+                <number>0</number>
+              </property>
+              <property name="topMargin">
+                <number>0</number>
+              </property>
+              <property name="rightMargin">
+                <number>0</number>
+              </property>
+              <property name="bottomMargin">
+                <number>0</number>
+              </property>
+              <property name="spacing">
+                <number>8</number>
+              </property>
+              <item>
+                <widget class="QLabel" name="lblAppName">
+                  <property name="text">
+                    <string>ZAPRET CONTROL</string>
+                  </property>
+                </widget>
+              </item>
+              <item>
+                <spacer name="headerSpacer">
+                  <property name="orientation">
+                    <enum>Qt::Horizontal</enum>
+                  </property>
+                  <property name="sizeHint" stdset="0">
+                    <size>
+                      <width>40</width>
+                      <height>20</height>
+                    </size>
+                  </property>
+                </spacer>
+              </item>
+              <item>
+                <widget class="QPushButton" name="btnSettings">
+                  <property name="text">
+                    <string>Настройки</string>
+                  </property>
+                </widget>
+              </item>
+            </layout>
+          </widget>
+        </item>
+        <item>
+          <widget class="QTabWidget" name="mainTabs">
+            <property name="currentIndex">
+              <number>0</number>
+            </property>
+            <widget class="QWidget" name="pageHome">
+              <layout class="QVBoxLayout" name="homeLayout">
+                <property name="leftMargin">
+                  <number>18</number>
+                </property>
+                <property name="topMargin">
+                  <number>18</number>
+                </property>
+                <property name="rightMargin">
+                  <number>18</number>
+                </property>
+                <property name="bottomMargin">
+                  <number>18</number>
+                </property>
+                <property name="spacing">
+                  <number>14</number></property>
+                <item>
+                  <widget class="QFrame" name="powerCard">
+                    <property name="minimumSize">
+                      <size><width>0</width><height>205</height></size></property>
+                    <layout class="QVBoxLayout" name="powerLayout">
+                      <property name="leftMargin">
+                        <number>16</number>
+                      </property>
+                      <property name="topMargin">
+                        <number>16</number>
+                      </property>
+                      <property name="rightMargin">
+                        <number>16</number>
+                      </property>
+                      <property name="bottomMargin">
+                        <number>16</number>
+                      </property>
+                      <property name="spacing">
+                        <number>11</number></property>
+                      <item>
+                        <widget class="QLabel" name="lblStatus">
+                          <property name="text">
+                            <string>● ZAPRET ОТКЛЮЧЁН</string>
+                          </property>
+                          <property name="alignment">
+                            <set>Qt::AlignCenter</set>
+                          </property>
+                        </widget>
+                      </item>
+                      <item>
+                        <widget class="QLabel" name="lblStatusDescription">
+                          <property name="text">
+                            <string>Сервис не запущен</string>
+                          </property>
+                          <property name="alignment">
+                            <set>Qt::AlignCenter</set>
+                          </property>
+                        </widget>
+                      </item>
+                      <item alignment="Qt::AlignHCenter">
+                        <widget class="QPushButton" name="btnPower">
+                          <property name="text">
+                            <string>ВКЛЮЧИТЬ</string>
+                          </property>
+                          <property name="minimumSize">
+                            <size><width>220</width><height>48</height></size></property>
+                        <property name="maximumSize"><size><width>320</width><height>48</height></size></property><property name="sizePolicy"><sizepolicy hsizetype="Preferred" vsizetype="Fixed"><horstretch>0</horstretch><verstretch>0</verstretch></sizepolicy></property></widget>
+                      </item>
+                    </layout>
+                  <property name="maximumSize"><size><width>16777215</width><height>205</height></size></property><property name="sizePolicy"><sizepolicy hsizetype="Preferred" vsizetype="Fixed"><horstretch>0</horstretch><verstretch>0</verstretch></sizepolicy></property></widget>
+                </item>
+                <item>
+                  <widget class="QLabel" name="lblCurrentStrategyHeader">
+                    <property name="text">
+                      <string>ВЫБРАТЬ СТРАТЕГИЮ</string>
+                    </property>
+                  <property name="minimumSize"><size><width>0</width><height>20</height></size></property></widget>
+                </item>
+                <item>
+                  <widget class="QFrame" name="currentStrategyCard">
+                    <layout class="QHBoxLayout" name="currentStrategyLayout">
+                      <property name="leftMargin">
+                        <number>14</number>
+                      </property>
+                      <property name="topMargin">
+                        <number>14</number>
+                      </property>
+                      <property name="rightMargin">
+                        <number>14</number>
+                      </property>
+                      <property name="bottomMargin">
+                        <number>14</number>
+                      </property>
+                      <property name="spacing">
+                        <number>12</number>
+                      </property>
+                      <item>
+                        <widget class="QComboBox" name="cmbHomeStrategy">
+                          <property name="minimumSize"><size><width>250</width><height>34</height></size></property>
+                          <property name="sizePolicy"><sizepolicy hsizetype="Expanding" vsizetype="Fixed"><horstretch>0</horstretch><verstretch>0</verstretch></sizepolicy></property>
+                        </widget>
+                      </item>
+                      <item>
+                        <widget class="QLabel" name="lblCurrentStrategy">
+
+                          <property name="text">
+                            <string>Не выбрана</string>
+                          </property>
+                        </widget>
+                      </item>
+                      <item>
+                        <spacer name="currentStrategySpacer">
+                          <property name="orientation">
+                            <enum>Qt::Horizontal</enum>
+                          </property>
+                          <property name="sizeHint" stdset="0">
+                            <size>
+                              <width>40</width>
+                              <height>20</height>
+                            </size>
+                          </property>
+                        </spacer>
+                      </item>
+                      <item>
+                        <widget class="QLabel" name="lblCurrentMode">
+                          <property name="text">
+                            <string>Ручной режим</string>
+                          </property>
+                        </widget>
+                      </item>
+                    </layout>
+                  </widget>
+                </item>
+                <item>
+                  <widget class="QLabel" name="lblRunningStrategy">
+                    <property name="text"><string>Сейчас работает: не запущена</string></property>
+                  </widget>
+                </item>
+                <item>
+                  <widget class="QLabel" name="lblHomeInfo">
+                    <property name="text">
+                      <string>Новый выбор вступит в силу после выключения и повторного включения zapret.</string>
+                    </property>
+                  </widget>
+                </item>
+                <item>
+                  <widget class="QFrame" name="warpCard">
+                    <layout class="QVBoxLayout" name="warpLayout">
+                      <property name="leftMargin"><number>14</number></property>
+                      <property name="topMargin"><number>12</number></property>
+                      <property name="rightMargin"><number>14</number></property>
+                      <property name="bottomMargin"><number>12</number></property>
+                      <property name="spacing"><number>8</number></property>
+                      <item><widget class="QLabel" name="lblWarpTitle"><property name="text"><string>CLOUDFLARE WARP</string></property></widget></item>
+                      <item><layout class="QHBoxLayout" name="warpStatusRow">
+                        <item><layout class="QVBoxLayout" name="warpStatusColumn">
+                          <item><widget class="QLabel" name="lblWarpStatus"><property name="text"><string>○ Проверка состояния WARP…</string></property></widget></item>
+                          <item><widget class="QLabel" name="lblWarpDetails"><property name="text"><string>Официальный клиент Cloudflare</string></property><property name="wordWrap"><bool>true</bool></property></widget></item>
+                        </layout></item>
+                        <item><widget class="QPushButton" name="btnWarpToggle"><property name="text"><string>Подключить WARP</string></property><property name="enabled"><bool>false</bool></property><property name="minimumSize"><size><width>165</width><height>38</height></size></property></widget></item>
+                      </layout></item>
+                    </layout>
+                  <property name="minimumSize"><size><width>0</width><height>110</height></size></property></widget>
+                </item>
+                <item>
+                  <spacer name="homeStretch">
+                    <property name="orientation">
+                      <enum>Qt::Vertical</enum>
+                    </property>
+                    <property name="sizeHint" stdset="0">
+                      <size>
+                        <width>40</width>
+                        <height>20</height>
+                      </size>
+                    </property>
+                  </spacer>
+                </item>
+              </layout>
+              <attribute name="title">
+                <string>Главная</string>
+              </attribute>
+            </widget>
+            <widget class="QWidget" name="pageStrategies">
+              <layout class="QVBoxLayout" name="strategyLayout">
+                <property name="leftMargin">
+                  <number>18</number>
+                </property>
+                <property name="topMargin">
+                  <number>18</number>
+                </property>
+                <property name="rightMargin">
+                  <number>18</number>
+                </property>
+                <property name="bottomMargin">
+                  <number>18</number>
+                </property>
+                <property name="spacing">
+                  <number>14</number>
+                </property>
+                <item>
+                  <widget class="QLabel" name="lblStrategyTitle">
+                    <property name="text">
+                      <string>Подбор стратегии обхода</string>
+                    </property>
+                  </widget>
+                </item>
+                <item>
+                  <widget class="QCheckBox" name="chkAutoMode">
+                    <property name="text">
+                      <string>Автоматически выбирать оптимальную стратегию</string>
+                    </property>
+                  </widget>
+                </item>
+                <item>
+                  <widget class="QWidget" name="strategyControls">
+                    <layout class="QHBoxLayout" name="strategyControlsLayout">
+                      <property name="leftMargin">
+                        <number>0</number>
+                      </property>
+                      <property name="topMargin">
+                        <number>0</number>
+                      </property>
+                      <property name="rightMargin">
+                        <number>0</number>
+                      </property>
+                      <property name="bottomMargin">
+                        <number>0</number>
+                      </property>
+                      <property name="spacing">
+                        <number>8</number>
+                      </property>
+                      <item>
+                        <widget class="QPushButton" name="btnFindStrategy">
+                          <property name="text">
+                            <string>Проверить стратегии</string>
+                          </property>
+                        </widget>
+                      </item>
+                      <item>
+                        <widget class="QPushButton" name="btnStopStrategy">
+                          <property name="text">
+                            <string>Стоп</string>
+                          </property>
+                          <property name="toolTip">
+                            <string>Прервать тестирование F-03</string>
+                          </property>
+                          <property name="enabled">
+                            <bool>false</bool>
+                          </property>
+                        </widget>
+                      </item>
+                      <item>
+                        <widget class="QPushButton" name="btnApplyBest">
+                          <property name="text">
+                            <string>Выбрать оптимальную</string>
+                          </property>
+                        </widget>
+                      </item>
+                    </layout>
+                  </widget>
+                </item>
+                <item>
+                  <widget class="QComboBox" name="cmbStrategies"/>
+                </item>
+                <item>
+                  <widget class="QProgressBar" name="progressStrategy">
+                    <property name="value">
+                      <number>0</number>
+                    </property>
+                  </widget>
+                </item>
+                <item>
+                  <widget class="QLabel" name="lblStrategyProgress">
+                    <property name="text">
+                      <string>Ожидание запуска проверки</string>
+                    </property>
+                  </widget>
+                </item>
+                <item>
+                  <widget class="QTableWidget" name="tableStrategyResults">
+                    <property name="columnCount">
+                      <number>3</number>
+                    </property>
+                    <property name="rowCount">
+                      <number>0</number>
+                    </property>
+                    <column>
+                      <property name="text">
+                        <string>Стратегия</string>
+                      </property>
+                    </column>
+                    <column>
+                      <property name="text">
+                        <string>Проверка</string>
+                      </property>
+                    </column>
+                    <column>
+                      <property name="text">
+                        <string>Результат</string>
+                      </property>
+                    </column>
+                  </widget>
+                </item>
+                <item>
+                  <widget class="QPlainTextEdit" name="txtTestOutput">
+                    <property name="readOnly">
+                      <bool>true</bool>
+                    </property>
+                    <property name="placeholderText">
+                      <string>Здесь будет появляться вывод штатного тестера по мере проверки...</string>
+                    </property>
+                    <property name="minimumSize">
+                      <size>
+                        <width>0</width>
+                        <height>115</height>
+                      </size>
+                    </property>
+                  </widget>
+                </item>
+              </layout>
+              <attribute name="title">
+                <string>Стратегии</string>
+              </attribute>
+            </widget>
+            <widget class="QWidget" name="pageUpdates">
+              <layout class="QVBoxLayout" name="updatesLayout">
+                <property name="leftMargin">
+                  <number>18</number>
+                </property>
+                <property name="topMargin">
+                  <number>18</number>
+                </property>
+                <property name="rightMargin">
+                  <number>18</number>
+                </property>
+                <property name="bottomMargin">
+                  <number>18</number>
+                </property>
+                <property name="spacing">
+                  <number>16</number>
+                </property>
+                <item>
+                  <widget class="QLabel" name="lblUpdatesTitle">
+                    <property name="text">
+                      <string>Обновление zapret</string>
+                    </property>
+                  </widget>
+                </item>
+                <item>
+                  <widget class="QFrame" name="updateCard">
+                    <layout class="QVBoxLayout" name="updateCardLayout">
+                      <property name="leftMargin">
+                        <number>16</number>
+                      </property>
+                      <property name="topMargin">
+                        <number>16</number>
+                      </property>
+                      <property name="rightMargin">
+                        <number>16</number>
+                      </property>
+                      <property name="bottomMargin">
+                        <number>16</number>
+                      </property>
+                      <property name="spacing">
+                        <number>12</number>
+                      </property>
+                      <item>
+                        <widget class="QLabel" name="lblInstalledVersion">
+                          <property name="text">
+                            <string>Установленная версия: не определена</string>
+                          </property>
+                        </widget>
+                      </item>
+                      <item>
+                        <widget class="QLabel" name="lblAvailableVersion">
+                          <property name="text">
+                            <string>Последняя версия: не проверена</string>
+                          </property>
+                        </widget>
+                      </item>
+                      <item>
+                        <widget class="QLabel" name="lblUpdateStatus">
+                          <property name="text">
+                            <string>Обновления ещё не проверялись</string>
+                          </property>
+                        </widget>
+                      </item>
+                    </layout>
+                  </widget>
+                </item>
+                <item>
+                  <widget class="QWidget" name="updateButtons">
+                    <layout class="QHBoxLayout" name="updateButtonsLayout">
+                      <property name="leftMargin">
+                        <number>0</number>
+                      </property>
+                      <property name="topMargin">
+                        <number>0</number>
+                      </property>
+                      <property name="rightMargin">
+                        <number>0</number>
+                      </property>
+                      <property name="bottomMargin">
+                        <number>0</number>
+                      </property>
+                      <property name="spacing">
+                        <number>8</number>
+                      </property>
+                      <item>
+                        <widget class="QPushButton" name="btnCheckUpdates">
+                          <property name="text">
+                            <string>Проверить обновления</string>
+                          </property>
+                        </widget>
+                      </item>
+                      <item>
+                        <widget class="QPushButton" name="btnInstallUpdate">
+                          <property name="text">
+                            <string>Установить обновление</string>
+                          </property>
+                        </widget>
+                      </item>
+                    </layout>
+                  </widget>
+                </item>
+                <item>
+                  <widget class="QCheckBox" name="chkBackupBeforeUpdate">
+                    <property name="text">
+                      <string>Создавать резервную копию перед обновлением</string>
+                    </property>
+                  </widget>
+                </item>
+                <item>
+                  <widget class="QLabel" name="lblUpdateNote">
+                    <property name="text">
+                      <string>Сохранение пользовательской конфигурации и откат реализуем в Python backend.</string>
+                    </property>
+                  </widget>
+                </item>
+                <item>
+                  <spacer name="updatesStretch">
+                    <property name="orientation">
+                      <enum>Qt::Vertical</enum>
+                    </property>
+                    <property name="sizeHint" stdset="0">
+                      <size>
+                        <width>40</width>
+                        <height>20</height>
+                      </size>
+                    </property>
+                  </spacer>
+                </item>
+              </layout>
+              <attribute name="title">
+                <string>Обновления</string>
+              </attribute>
+            </widget>
+          </widget>
+        </item>
+        <item>
+          <widget class="QWidget" name="footerWidget">
+            <layout class="QHBoxLayout" name="footerLayout">
+              <property name="leftMargin">
+                <number>0</number>
+              </property>
+              <property name="topMargin">
+                <number>0</number>
+              </property>
+              <property name="rightMargin">
+                <number>0</number>
+              </property>
+              <property name="bottomMargin">
+                <number>0</number>
+              </property>
+              <property name="spacing">
+                <number>4</number>
+              </property>
+              <item>
+                <widget class="QLabel" name="lblSystemStatus">
+                  <property name="text">
+                    <string>● Zapret не запущен</string>
+                  </property>
+                </widget>
+              </item>
+              <item>
+                <spacer name="footerSpacer">
+                  <property name="orientation">
+                    <enum>Qt::Horizontal</enum>
+                  </property>
+                  <property name="sizeHint" stdset="0">
+                    <size>
+                      <width>40</width>
+                      <height>20</height>
+                    </size>
+                  </property>
+                </spacer>
+              </item>
+              <item>
+                <widget class="QPushButton" name="btnLog">
+                  <property name="text">
+                    <string>Журнал</string>
+                  </property>
+                </widget>
+              </item>
+            </layout>
+          </widget>
+        </item>
+      </layout>
+    </widget>
+  </widget>
+  <resources/>
+  <connections/>
+</ui>

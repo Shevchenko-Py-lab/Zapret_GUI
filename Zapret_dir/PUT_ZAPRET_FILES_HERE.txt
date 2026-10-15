@@ -1,0 +1,1 @@
+Помести сюда СОДЕРЖИМОЕ zapret-discord-youtube-1.10.3, чтобы service.bat и general.bat лежали непосредственно в Zapert_dir.

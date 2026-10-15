@@ -1,0 +1,167 @@
+/* Zapret Control — dark theme, improved contrast for Qt Widgets / PySide6 */
+QMainWindow, QWidget#centralwidget {
+    background-color: #11151b;
+    color: #edf3fa;
+    font-family: "Segoe UI";
+    font-size: 13px;
+}
+
+/* Text on all screens: prevent native black text on dark surfaces. */
+QLabel {
+    color: #edf3fa;
+    background: transparent;
+}
+QLabel:disabled { color: #909baa; }
+QLabel#lblAppName { font-weight: 700; font-size: 20px; color: #ffffff; }
+QLabel#lblStatus { font-size: 22px; font-weight: 700; color: #eaf2fc; }
+QLabel#lblStrategyTitle, QLabel#lblUpdatesTitle { font-size: 17px; font-weight: 600; color: #f4f7fc; }
+QLabel#lblCurrentStrategyHeader { font-size: 11px; font-weight: 700; color: #c0cbd9; }
+QLabel#lblHomeInfo, QLabel#lblUpdateNote, QLabel#lblStatusDescription,
+QLabel#lblSystemStatus { color: #bcc9d9; }
+QLabel#lblCurrentStrategy, QLabel#lblCurrentMode,
+QLabel#lblInstalledVersion, QLabel#lblAvailableVersion,
+QLabel#lblUpdateStatus, QLabel#lblStrategyProgress { color: #eaf2fc; }
+
+/* Sections and cards. */
+QTabWidget::pane { background-color: #151b23; border: 1px solid #344253; border-radius: 8px; }
+QWidget#pageHome, QWidget#pageStrategies, QWidget#pageUpdates { background-color: #151b23; color: #edf3fa; }
+QTabBar::tab { background-color: #202b39; color: #c7d3e3; padding: 11px 25px; border: 1px solid #344253; }
+QTabBar::tab:selected { background-color: #304966; color: #ffffff; }
+QTabBar::tab:hover:!selected { background-color: #293b50; color: #ffffff; }
+QFrame#powerCard, QFrame#currentStrategyCard, QFrame#updateCard {
+    background-color: #1d2530;
+    border: 1px solid #3e4d60;
+    border-radius: 12px;
+}
+
+/* Controls */
+QPushButton {
+    color: #ffffff;
+    background-color: #2b3b4e;
+    border: 1px solid #52647b;
+    border-radius: 8px;
+    padding: 9px 14px;
+}
+QPushButton:hover { color: #ffffff; background-color: #39516b; border-color: #6985a5; }
+QPushButton:pressed { background-color: #213448; }
+QPushButton:disabled {
+    color: #a5b1c1;
+    background-color: #222b35;
+    border-color: #384453;
+}
+QPushButton#btnPower { color: #ffffff; background-color: #286ac0; border: 1px solid #3780d9; font-weight: 700; padding: 12px 35px; }
+QPushButton#btnPower:hover { background-color: #367ed8; }
+QPushButton#btnStopStrategy { color: #ffffff; background-color: #92363c; border: 1px solid #c35b63; font-weight: 600; }
+QPushButton#btnStopStrategy:hover { background-color: #af444b; }
+QPushButton#btnStopStrategy:disabled { color: #ac9597; background-color: #372b31; border-color: #544249; }
+QToolButton { color: #eaf2fc; background-color: transparent; border: 0; padding: 6px; }
+QToolButton:hover { color: #ffffff; background-color: #2b3b4e; border-radius: 5px; }
+QToolButton:disabled { color: #909baa; }
+QCheckBox, QRadioButton { color: #eaf2fc; spacing: 9px; background: transparent; }
+QCheckBox:disabled, QRadioButton:disabled { color: #9eacbd; }
+QCheckBox::indicator, QRadioButton::indicator { width: 16px; height: 16px; }
+
+/* Drop-down and popup options */
+QComboBox {
+    color: #ffffff;
+    background-color: #263443;
+    border: 1px solid #576b83;
+    border-radius: 6px;
+    padding: 6px 10px;
+    min-height: 22px;
+}
+QComboBox:hover { border-color: #7ca3d1; }
+QComboBox:disabled { color: #a3b0c0; background-color: #212a35; }
+QComboBox QAbstractItemView {
+    color: #ffffff;
+    background-color: #202b39;
+    border: 1px solid #627791;
+    selection-color: #ffffff;
+    selection-background-color: #365e8d;
+    outline: none;
+}
+QLineEdit, QTextEdit, QPlainTextEdit, QSpinBox {
+    color: #ffffff;
+    background-color: #202b39;
+    border: 1px solid #566a81;
+    border-radius: 5px;
+    padding: 5px;
+    selection-color: #ffffff;
+    selection-background-color: #365e8d;
+}
+
+/* F-03 results table */
+QTableWidget, QTableView {
+    color: #ecf3fc;
+    background-color: #1b2632;
+    alternate-background-color: #263544;
+    gridline-color: #405165;
+    border: 1px solid #485a70;
+    selection-color: #ffffff;
+    selection-background-color: #315b88;
+    outline: none;
+}
+QTableWidget::item, QTableView::item { color: #edf3fa; padding: 4px; }
+QTableWidget::item:selected, QTableView::item:selected { color: #ffffff; background-color: #315b88; }
+QHeaderView::section {
+    color: #ffffff;
+    background-color: #304155;
+    padding: 7px;
+    border: 0;
+    border-right: 1px solid #44596f;
+    border-bottom: 1px solid #44596f;
+    font-weight: 600;
+}
+QTableCornerButton::section { background-color: #304155; border: 0; }
+
+/* Progress and scrollbars */
+QProgressBar {
+    color: #ffffff;
+    background-color: #263443;
+    border: 1px solid #52647b;
+    border-radius: 5px;
+    text-align: center;
+    min-height: 18px;
+}
+QProgressBar::chunk { background-color: #3885dd; border-radius: 4px; }
+QScrollBar:vertical { background: #1b2632; width: 11px; margin: 0; }
+QScrollBar::handle:vertical { background: #506783; border-radius: 5px; min-height: 24px; }
+QScrollBar:horizontal { background: #1b2632; height: 11px; margin: 0; }
+QScrollBar::handle:horizontal { background: #506783; border-radius: 5px; min-width: 24px; }
+QScrollBar::add-line, QScrollBar::sub-line { border: 0; background: transparent; width: 0; height: 0; }
+
+/* Dialogs created by QInputDialog / QMessageBox */
+QDialog, QMessageBox, QInputDialog { background-color: #151b23; color: #edf3fa; }
+QDialog QLabel, QMessageBox QLabel, QInputDialog QLabel { color: #edf3fa; }
+
+/* Home page strategy dropdown */
+QComboBox#cmbHomeStrategy {
+    background-color: #252c36;
+    color: #f2f6fc;
+    border: 1px solid #46556a;
+    border-radius: 7px;
+    min-height: 34px;
+    padding: 4px 12px;
+}
+QComboBox#cmbHomeStrategy QAbstractItemView {
+    background-color: #1d2632;
+    color: #f2f6fc;
+    selection-background-color: #325a8c;
+    selection-color: #ffffff;
+}
+
+/* Running profile is separate from the profile selected for next start */
+QLabel#lblRunningStrategy { color: #80d8a0; font-size: 13px; font-weight: 600; padding: 3px 2px; }
+
+/* F-05 WARP home card */
+QFrame#warpCard { background-color: #202b39; border: 1px solid #3a4b60; border-radius: 9px; }
+QLabel#lblWarpTitle { color: #f2b074; font-size: 13px; font-weight: bold; }
+QLabel#lblWarpStatus { color: #e6edf3; font-size: 15px; font-weight: bold; }
+QLabel#lblWarpStatus[warpState="connected"] { color: #4ade80; }
+QLabel#lblWarpStatus[warpState="disconnected"] { color: #cbd5e1; }
+QLabel#lblWarpStatus[warpState="connecting"], QLabel#lblWarpStatus[warpState="disconnecting"] { color: #7db9ff; }
+QLabel#lblWarpStatus[warpState="unknown"], QLabel#lblWarpStatus[warpState="not_installed"] { color: #f6c46a; }
+QLabel#lblWarpDetails { color: #aabbd0; font-size: 12px; }
+QPushButton#btnWarpToggle { color: #ffffff; background-color: #2b5686; border: 1px solid #4675ab; border-radius: 7px; padding: 8px; }
+QPushButton#btnWarpToggle:hover { background-color: #376b9f; }
+QPushButton#btnWarpToggle:disabled { color: #a4afbd; background-color: #293442; border-color: #394759; }
