@@ -5,7 +5,13 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="4601439d-7ff0-474c-8f93-02651ac01f71" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/installer_output/ZapretControl_Setup_v0.8.1.exe" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Zapret_backend/f01_power.py" beforeDir="false" afterPath="$PROJECT_DIR$/Zapret_backend/f01_power.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/installer.iss" beforeDir="false" afterPath="$PROJECT_DIR$/installer.iss" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/zapret_frontend/dark.qss" beforeDir="false" afterPath="$PROJECT_DIR$/zapret_frontend/dark.qss" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/zapret_frontend/main_window.ui" beforeDir="false" afterPath="$PROJECT_DIR$/zapret_frontend/main_window.ui" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -15,6 +21,18 @@
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
+  <component name="GitHubPullRequestSearchHistory"><![CDATA[{
+  "lastFilter": {
+    "state": "OPEN",
+    "assignee": "Shevchenko-Py-lab"
+  }
+}]]></component>
+  <component name="GithubPullRequestsUISettings"><![CDATA[{
+  "selectedUrlAndAccountId": {
+    "url": "https://github.com/Shevchenko-Py-lab/Zapret_GUI.git",
+    "accountId": "cb9b3c46-da30-48c7-a3f6-816ee02f9784"
+  }
+}]]></component>
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 0
 }</component>

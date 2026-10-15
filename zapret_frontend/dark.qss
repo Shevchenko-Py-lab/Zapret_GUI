@@ -134,34 +134,23 @@ QScrollBar::add-line, QScrollBar::sub-line { border: 0; background: transparent;
 QDialog, QMessageBox, QInputDialog { background-color: #151b23; color: #edf3fa; }
 QDialog QLabel, QMessageBox QLabel, QInputDialog QLabel { color: #edf3fa; }
 
-/* Home page strategy dropdown */
-QComboBox#cmbHomeStrategy {
-    background-color: #252c36;
-    color: #f2f6fc;
-    border: 1px solid #46556a;
-    border-radius: 7px;
-    min-height: 34px;
-    padding: 4px 12px;
+/* New v0.9 pages */
+QWidget#pageFilters, QWidget#pageDiagnostics, QWidget#pageTraffic,
+QWidget#tabFilterDomains, QWidget#tabFilterExcludes, QWidget#tabFilterIPs, QWidget#tabFilterIPExcludes {
+    background-color: #151b23; color: #edf3fa;
 }
-QComboBox#cmbHomeStrategy QAbstractItemView {
-    background-color: #1d2632;
-    color: #f2f6fc;
-    selection-background-color: #325a8c;
-    selection-color: #ffffff;
-}
+QLabel#lblFiltersTitle, QLabel#lblDiagnosticsTitle, QLabel#lblTrafficTitle { font-size: 19px; font-weight: 700; color: #f4f7fc; }
+QLabel#lblFiltersNote, QLabel#lblDiagnosticsDescription, QLabel#lblTrafficDescription,
+QLabel#lblTrafficChartPlaceholder {color: #aabbd0;}
+QLabel#lblFilterWarning {color: #e9bc6a;}
+QFrame#filterModesCard, QFrame#trafficChartCard {background-color: #1d2530;border: 1px solid #3e4d60;border-radius: 10px;}
+QFrame#trafficChartPlaceholder {background-color:#131b26;border:1px dashed #49617d;border-radius: 8px;}
+QLineEdit {background:#101820;color:#f1f6fc;border:1px solid #52647b;border-radius:6px;padding:8px;}
+QLineEdit:focus {border:1px solid #64a8f5;}
+QWidget#rowTrafficRates QLabel {font-size: 13px;font-weight:600;}
+QPushButton#btnFilterSave, QPushButton#btnDiagnosticsStart, QPushButton#btnTrafficStart {background:#286ac0;border-color:#3780d9;font-weight:700;}
+QPushButton#btnFilterSave:hover, QPushButton#btnDiagnosticsStart:hover, QPushButton#btnTrafficStart:hover {background:#367ed8;}
 
-/* Running profile is separate from the profile selected for next start */
-QLabel#lblRunningStrategy { color: #80d8a0; font-size: 13px; font-weight: 600; padding: 3px 2px; }
-
-/* F-05 WARP home card */
-QFrame#warpCard { background-color: #202b39; border: 1px solid #3a4b60; border-radius: 9px; }
-QLabel#lblWarpTitle { color: #f2b074; font-size: 13px; font-weight: bold; }
-QLabel#lblWarpStatus { color: #e6edf3; font-size: 15px; font-weight: bold; }
-QLabel#lblWarpStatus[warpState="connected"] { color: #4ade80; }
-QLabel#lblWarpStatus[warpState="disconnected"] { color: #cbd5e1; }
-QLabel#lblWarpStatus[warpState="connecting"], QLabel#lblWarpStatus[warpState="disconnecting"] { color: #7db9ff; }
-QLabel#lblWarpStatus[warpState="unknown"], QLabel#lblWarpStatus[warpState="not_installed"] { color: #f6c46a; }
-QLabel#lblWarpDetails { color: #aabbd0; font-size: 12px; }
-QPushButton#btnWarpToggle { color: #ffffff; background-color: #2b5686; border: 1px solid #4675ab; border-radius: 7px; padding: 8px; }
-QPushButton#btnWarpToggle:hover { background-color: #376b9f; }
-QPushButton#btnWarpToggle:disabled { color: #a4afbd; background-color: #293442; border-color: #394759; }
+QPushButton#btnFilterInspect { background-color: #30516b; border-color: #5b8cae; font-weight: 600; }
+QPushButton#btnFilterInspect:hover { background-color: #3b6687; }
+QPlainTextEdit#txtFilterCurrentSettings { background-color: #141e29; border: 1px solid #4b6682; color: #dfebfa; font-family: Consolas; font-size: 12px; }
