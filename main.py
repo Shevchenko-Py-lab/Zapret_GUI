@@ -10,15 +10,23 @@ import re
 import traceback
 from pathlib import Path
 
-from PySide6.QtCore import QFile, QObject, QThread, QTimer, Signal, Slot
+from PySide6.QtCore import QFile, QObject, QThread, QTimer, Signal, Slot, Qt
 from PySide6.QtGui import QColor, QTextCharFormat, QTextCursor
 from PySide6.QtUiTools import QUiLoader
-from PySide6.QtWidgets import QApplication, QComboBox, QMessageBox, QPushButton, QInputDialog, QTableWidget, QTableWidgetItem, QHeaderView, QAbstractItemView, QPlainTextEdit
+from PySide6.QtWidgets import QApplication, QComboBox, QMessageBox, QPushButton, QInputDialog, QTableWidget, QTableWidgetItem, QHeaderView, QAbstractItemView, QPlainTextEdit, QFileDialog
 
 from Zapret_backend.f05_warp import WarpController, WarpState
 from Zapret_backend.f01_power import PowerController
 from Zapret_backend.f02_strategy import strategies_in
-from Zapret_backend.f03_auto_strategy import Selection, choose_best, TestCancellation, TestCancelled
+from Zapret_backend.f03_auto_strategy import (
+    Selection,
+    choose_best,
+    choose_best_verified,
+    TestCancellation,
+    TestCancelled,
+    parse_report,
+    analyze_stability,
+)
 from Zapret_backend.f04_update import install_release, latest_release
 from Zapret_backend.version_store import latest_installation, version_key
 from Zapret_backend.f06_ui import bind_filter_inspection
@@ -99,7 +107,7 @@ class ControlWindow(QObject):
             return obj
 
         self.ui = {name: widget(name) for name in (
-            "btnPower", "btnFindStrategy", "btnStopStrategy", "btnApplyBest", "btnCheckUpdates", "btnInstallUpdate",
+            "btnPower", "btnFindStrategy", "btnLoadStrategyReport", "btnStopStrategy", "btnApplyBest", "btnCheckUpdates", "btnInstallUpdate",
             "btnSettings", "btnLog", "cmbStrategies", "cmbHomeStrategy", "chkAutoMode", "chkBackupBeforeUpdate",
             "lblStatus", "lblStatusDescription", "lblCurrentStrategy", "lblCurrentMode", "lblRunningStrategy",
             "lblStrategyProgress", "progressStrategy", "tableStrategyResults", "txtTestOutput", "lblInstalledVersion", "lblAvailableVersion",
@@ -131,6 +139,7 @@ class ControlWindow(QObject):
         self.ui["btnPower"].clicked.connect(self.toggle_power)
         self.ui["txtTestOutput"].setMaximumBlockCount(700)
         self.ui["btnFindStrategy"].clicked.connect(self.test_strategies)
+        self.ui["btnLoadStrategyReport"].clicked.connect(self.load_strategy_report)
         self.ui["btnStopStrategy"].clicked.connect(self.stop_strategy_test)
         self.ui["btnApplyBest"].clicked.connect(self.apply_best)
         self.ui["btnCheckUpdates"].clicked.connect(self.check_updates)
@@ -234,39 +243,57 @@ class ControlWindow(QObject):
 
     def configure_results_table(self):
         table: QTableWidget = self.ui["tableStrategyResults"]
-        table.setColumnCount(6)
+        table.setColumnCount(8)
         table.setHorizontalHeaderLabels([
-            "Стратегия", "Успешно", "Ошибки", "Не поддерж.", "Ping OK / Blocked", "Результат"
+            "Стратегия", "OK", "FAIL", "BLOCKED", "UNSUP",
+            "OK повтор", "Δ OK (п.п.)", "Стабильность"
         ])
         table.setEditTriggers(QAbstractItemView.NoEditTriggers)
         table.setSelectionBehavior(QAbstractItemView.SelectRows)
         table.setAlternatingRowColors(True)
         table.horizontalHeader().setSectionResizeMode(0, QHeaderView.Stretch)
-        for column in range(1, 6):
+        for column in range(1, 8):
             table.horizontalHeader().setSectionResizeMode(column, QHeaderView.ResizeToContents)
 
     def render_results(self, selection: Selection):
         table: QTableWidget = self.ui["tableStrategyResults"]
         table.setRowCount(0)
         best_name = selection.best.name if selection.best else None
+        comparisons = {c.name: c for c in getattr(selection, "comparisons", ())}
         candidates = sorted(selection.candidates, key=lambda c: (-c.ok, c.errors, c.name.lower()))
         for row, candidate in enumerate(candidates):
             table.insertRow(row)
             is_best = candidate.name == best_name
+            comparison = comparisons.get(candidate.name)
+            if comparison:
+                stability = "Нестабильна" if comparison.unstable else "Стабильна"
+                repeated_ok = str(comparison.second.ok)
+                delta = f"{comparison.delta_pp:+.1f}"
+            else:
+                stability = "Не перепроверена"
+                repeated_ok = "—"
+                delta = "—"
+            if is_best:
+                stability = "★ " + stability
             values = [
                 candidate.name, str(candidate.ok), str(candidate.errors),
-                str(candidate.unsupported),
-                str(candidate.ping_ok if candidate.ping_ok else candidate.blocked),
-                "★ Победитель" if is_best else ("Не пройдена" if candidate.ok == 0 else "Проверена")
+                str(candidate.blocked), str(candidate.unsupported),
+                repeated_ok, delta, stability,
             ]
             for column, value in enumerate(values):
                 item = QTableWidgetItem(value)
-                if column in (1, 2, 3, 4):
-                    item.setTextAlignment(0x0002 | 0x0080)  # AlignRight | AlignVCenter
+                if 1 <= column <= 6:
+                    item.setTextAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
+                if comparison and comparison.unstable:
+                    item.setForeground(QColor("#f4c76a"))
                 table.setItem(row, column, item)
             if is_best:
                 table.selectRow(row)
-        table.setToolTip("Количество успехов и ошибок из штатного отчёта; победитель определяется штатным тестером.")
+        table.setToolTip(
+            "Первый проход: OK, FAIL, BLOCKED, UNSUP. "
+            "Повторный проход отображается для трёх лидеров; "
+            "Δ OK — изменение доли успешных проверок в процентных пунктах."
+        )
 
     def show(self):
         self.window.show()
@@ -345,6 +372,7 @@ class ControlWindow(QObject):
         self.ui["btnPower"].setText("ВЫКЛЮЧИТЬ" if running else "ВКЛЮЧИТЬ")
         self.ui["btnPower"].setEnabled(not self.busy)
         self.ui["btnFindStrategy"].setEnabled(not self.busy)
+        self.ui["btnLoadStrategyReport"].setEnabled(not self.busy)
         self.ui["btnStopStrategy"].setEnabled(self.busy and self.testing_f03 and self.test_cancellation is not None and not self.test_cancellation.event.is_set())
         self.ui["btnApplyBest"].setEnabled(not self.busy)
         self.ui["btnCheckUpdates"].setEnabled(not self.busy)
@@ -429,6 +457,8 @@ class ControlWindow(QObject):
             self.ui["lblStrategyProgress"].setText("Тестирование остановлено пользователем")
             self.ui["lblSystemStatus"].setText("F-03 отменён. Автоприменение отключено.")
         else:
+            self.pending_auto_apply = False
+            self.selection = None
             self.notify_error(details)
 
     def append_colored_test_line(self, line: str):
@@ -475,9 +505,68 @@ class ControlWindow(QObject):
             if row < 0:
                 row = table.rowCount()
                 table.insertRow(row)
-            values = [name, parts[1], parts[2], parts[3], parts[4], "Промежуточный"]
+            # STANDARD: name, OK, ERR, UNSUP, PingOK, Fail
+            # DPI: name, OK, FAIL, UNSUP, BLOCKED
+            if len(parts) == 6:
+                values = [name, parts[1], parts[2], "—", parts[3], "—", "—", "Промежуточный"]
+            else:
+                values = [name, parts[1], parts[2], parts[4], parts[3], "—", "—", "Промежуточный"]
             for col, value in enumerate(values):
                 table.setItem(row, col, QTableWidgetItem(str(value)))
+
+    @Slot()
+    def load_strategy_report(self):
+        """Read a saved Flowseal analytics TXT without running the tester.
+
+        A single imported report is unverified and must never auto-apply.
+        """
+        if self.busy:
+            QMessageBox.information(self.window, "F-03", "Дождись завершения текущего тестирования.")
+            return
+        initial_dir = ZAPRET_DIR / "utils" / "test results"
+        if not initial_dir.is_dir():
+            initial_dir = ZAPRET_DIR
+        filename, _ = QFileDialog.getOpenFileName(
+            self.window, "Загрузить отчёт Flowseal", str(initial_dir),
+            "Отчёты (*.txt);;Все файлы (*)"
+        )
+        if not filename:
+            return
+        report = Path(filename)
+        try:
+            raw = report.read_bytes()
+            if len(raw) > 8 * 1024 * 1024:
+                raise ValueError("Отчёт больше 8 МБ; проверь выбранный файл")
+            content = None
+            for encoding in ("utf-8-sig", "cp1251", "cp866"):
+                try:
+                    content = raw.decode(encoding)
+                    break
+                except UnicodeDecodeError:
+                    continue
+            if content is None:
+                raise ValueError("Не удалось определить кодировку TXT")
+            if "=== ANALYTICS ===" not in content or "Best strategy:" not in content:
+                raise ValueError("Не найден блок ANALYTICS или строка Best strategy")
+            first = parse_report(content, ZAPRET_DIR, report)
+            if not first.candidates:
+                raise ValueError("В отчёте нет результатов проверок стратегий")
+            result = analyze_stability(first, None)
+            self.pending_auto_apply = False
+            self.on_tested(result)
+            self.pending_auto_apply = False
+            self.ui["txtTestOutput"].setPlainText(content[-45000:])
+            self.ui["lblStrategyProgress"].setText(
+                f"Загружен отчёт: {report.name}; стратегий: {len(first.candidates)}; "
+                "стабильность не подтверждена"
+            )
+            self.ui["lblSystemStatus"].setText(
+                "Результат загружен из TXT. Автоприменение отключено; "
+                "повторная проверка не выполнялась."
+            )
+        except Exception as exc:
+            self.pending_auto_apply = False
+            QMessageBox.warning(self.window, "Импорт результатов F-03", str(exc))
 
     @Slot()
     def test_strategies(self):
@@ -519,7 +608,7 @@ class ControlWindow(QObject):
             self.ui["tableStrategyResults"].setRowCount(0)
             self.ui["txtTestOutput"].clear()
             self.set_job(
-                lambda: choose_best(ZAPRET_DIR, test_type=test_type, run_mode=run_mode,
+                lambda: choose_best_verified(ZAPRET_DIR, test_type=test_type, run_mode=run_mode,
                                     selected_names=selected_names, cancellation=self.test_cancellation,
                                     progress=self.job.progress.emit),
                 self.on_tested, "Штатный тестер проверяет стратегии (может занять время)…",
@@ -539,8 +628,16 @@ class ControlWindow(QObject):
         self.selection = selection
         self.render_results(selection)
         best = selection.best.name if selection.best else "подходящая стратегия не найдена"
-        self.ui["lblStrategyProgress"].setText(f"Проверено: {len(selection.candidates)}; лучшая: {best}")
-        self.ui["lblSystemStatus"].setText("Тестирование завершено; стратегия пока не применена")
+        verified = bool(getattr(selection, "safe_auto_apply", False))
+        warning = getattr(selection, "warning", "Подтверждение стабильности отсутствует")
+        self.ui["lblStrategyProgress"].setText(
+            f"Проверено: {len(selection.candidates)}; лидер: {best}; "
+            + ("повторная проверка подтверждена" if verified else f"предупреждение: {warning}")
+        )
+        self.ui["lblSystemStatus"].setText(
+            "Тест завершён; автоматическое применение разрешено" if verified else
+            "Тест завершён; автоприменение запрещено: " + warning
+        )
         if selection.best:
             index = self.ui["cmbStrategies"].findData(str(selection.best))
             if index >= 0:
@@ -558,8 +655,17 @@ class ControlWindow(QObject):
                 home.setCurrentIndex(home_index)
                 home.blockSignals(False)
             if self.ui["chkAutoMode"].isChecked():
-                self.pending_auto_apply = True
-                self.ui["lblSystemStatus"].setText("Победитель найден — автоматическое применение после теста…")
+                if verified:
+                    self.pending_auto_apply = True
+                    self.ui["lblSystemStatus"].setText(
+                        "Стратегия прошла повторную проверку — автоматическое применение…"
+                    )
+                else:
+                    self.pending_auto_apply = False
+                    self.ui["lblSystemStatus"].setText(
+                        "Стратегия не прошла проверку стабильности. "
+                        "Автоматическое применение отменено."
+                    )
         elif self.ui["chkAutoMode"].isChecked():
             self.ui["lblSystemStatus"].setText("Нет успешной стратегии: автоматическое применение отменено")
 

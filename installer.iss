@@ -3,7 +3,7 @@
 ; Build with Inno Setup Compiler or ISCC.exe installer.iss
 
 #define MyAppName "Zapret Control"
-#define MyAppVersion "1.0"
+#define MyAppVersion "1.1.0"
 #define MyAppPublisher "Zapret Control"
 #define MyAppExeName "ZapretControl.exe"
 
@@ -33,8 +33,16 @@ Name: "russian"; MessagesFile: "compiler:Languages\Russian.isl"
 Name: "desktopicon"; Description: "Создать ярлык на рабочем столе"; GroupDescription: "Ярлыки:"; Flags: unchecked
 
 [Files]
-; Include the entire PyInstaller --onedir output, including _internal, QSS/UI and Zapret_dir.
-Source: "dist\ZapretControl\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+; Программа и интерфейс — обновляются штатно
+Source: "dist\ZapretControl\*"; DestDir: "{app}"; \
+    Excludes: "Zapret_dir\*"; \
+    Flags: ignoreversion recursesubdirs createallsubdirs
+
+; Движок zapret — устанавливается только если файлов ещё нет
+; При обновлении существующие файлы не перезаписываются
+Source: "dist\ZapretControl\Zapret_dir\*"; \
+    DestDir: "{app}\Zapret_dir"; \
+    Flags: onlyifdoesntexist recursesubdirs createallsubdirs uninsneveruninstall
 
 [Icons]
 Name: "{autoprograms}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; WorkingDir: "{app}"

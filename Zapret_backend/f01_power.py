@@ -124,16 +124,34 @@ class PowerController:
         raise self._startup_error(timeout)
 
     def _running_services(self, pids: set[int]) -> list[str]:
-        if os.name != 'nt':
+        if os.name != "nt":
             return []
+
         names = []
-        for svc in psutil.win_service_iter():
-            try:
-                data = svc.as_dict()
-                if data.get('status') == 'running' and data.get('pid') in pids:
-                    names.append(data['name'])
-            except (psutil.AccessDenied, psutil.NoSuchProcess):
-                continue
+        try:
+            services = psutil.win_service_iter()
+            for svc in services:
+                try:
+                    data = svc.as_dict()
+                    if (
+                            data.get("status") == "running"
+                            and data.get("pid") in pids
+                    ):
+                        names.append(data["name"])
+                except (
+                        psutil.AccessDenied,
+                        psutil.NoSuchProcess,
+                        FileNotFoundError,
+                ):
+                    # Служба может исчезнуть во время перечисления.
+                    continue
+        except (OSError, psutil.Error) as exc:
+            raise RuntimeError(
+                "Не удалось проверить службы Windows. "
+                "Отключение отменено, чтобы не завершить "
+                "служебный процесс некорректно."
+            ) from exc
+
         return names
 
     def stop(self) -> None:

@@ -10,6 +10,8 @@ import json
 import os
 import subprocess
 import time
+import locale
+import ctypes
 
 try:
     import psutil
@@ -27,10 +29,25 @@ class CheckResult:
 
 def _command(*args: str, timeout: int = 6) -> tuple[int, str]:
     try:
-        p = subprocess.run(args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                           text=True, errors='replace', timeout=timeout,
-                           creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0))
-        return p.returncode, p.stdout.strip()
+        process = subprocess.run(
+            args,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            timeout=timeout,
+            creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
+        )
+
+        if os.name == "nt":
+            encoding = f"cp{ctypes.windll.kernel32.GetOEMCP()}"
+        else:
+            encoding = locale.getpreferredencoding(False)
+
+        output = process.stdout.decode(
+            encoding, errors="replace"
+        ).strip()
+
+        return process.returncode, output
+
     except (OSError, subprocess.TimeoutExpired) as exc:
         return -1, str(exc)
 
@@ -51,10 +68,24 @@ class Diagnostics:
             add('platform', 'Windows', 'unknown', 'Диагностика системных служб доступна только в Windows')
             return results
 
-        code, output = _command('sc.exe', 'query', 'BFE')
-        # sc output is localized; numeric state 4 is RUNNING.
-        running = any('4' in line and 'STATE' in line.upper() for line in output.splitlines())
-        add('bfe', 'Base Filtering Engine', 'ok' if running else 'error', output[-350:] or f'sc exit={code}')
+        try:
+            service = psutil.win_service_get("BFE")
+            status = service.status()
+
+            add(
+                "bfe",
+                "Base Filtering Engine",
+                "ok" if status == "running" else "error",
+                f"Состояние службы: {status}"
+            )
+
+        except (psutil.Error, OSError) as exc:
+            add(
+                "bfe",
+                "Base Filtering Engine",
+                "unknown",
+                f"Не удалось проверить службу: {exc}"
+            )
 
         winws = []
         conflicts = []
@@ -77,9 +108,24 @@ class Diagnostics:
         add('tcp', 'Параметры TCP', 'ok' if code == 0 else 'unknown', output[-900:])
         code, output = _command('netsh', 'winhttp', 'show', 'proxy')
         add('proxy', 'WinHTTP proxy', 'ok' if code == 0 else 'unknown', output[-450:])
-        code, output = _command('sc.exe', 'query', 'WinDivert')
-        add('windivert', 'Служба WinDivert', 'ok' if code == 0 and 'STATE' in output.upper() else 'warning',
-            output[-450:] or 'Служба не зарегистрирована (при выключенном zapret это может быть нормально)')
+        try:
+            service = psutil.win_service_get("WinDivert")
+            status = service.status()
+
+            add(
+                "windivert",
+                "Служба WinDivert",
+                "ok" if status == "running" else "warning",
+                f"Состояние службы: {status}"
+            )
+
+        except (psutil.Error, OSError) as exc:
+            add(
+                "windivert",
+                "Служба WinDivert",
+                "warning",
+                f"Служба недоступна или не зарегистрирована: {exc}"
+            )
         return results
 
     @staticmethod
