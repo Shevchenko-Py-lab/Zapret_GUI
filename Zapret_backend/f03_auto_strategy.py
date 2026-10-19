@@ -171,7 +171,7 @@ def choose_best(root: str | Path, *, test_type: str = 'dpi', run_mode: str = 'al
     temp = root / 'utils' / ('_gui_test_' + uuid.uuid4().hex + '.ps1')
     temp.write_text(unattended, encoding='utf-8-sig')
     report_dir.mkdir(exist_ok=True)
-    previous = {p.resolve() for p in report_dir.glob('test_results_*.txt')}
+    previous = {p.resolve(): p.stat().st_mtime_ns for p in report_dir.glob('test_results_*.txt')}
     try:
         # Read stdout incrementally. PowerShell's terminal output is shown in Qt
         # while the process runs; upstream's final report remains authoritative.
@@ -243,26 +243,15 @@ def choose_best(root: str | Path, *, test_type: str = 'dpi', run_mode: str = 'al
             if process.stdout:
                 process.stdout.close()
         returncode = process.returncode
-        reports = [p for p in report_dir.glob('test_results_*.txt') if p.resolve() not in previous]
+        reports = [p for p in report_dir.glob('test_results_*.txt')
+                   if p.resolve() not in previous or p.stat().st_mtime_ns > previous[p.resolve()]]
         if returncode or not reports:
             tail_text = '\n'.join(tail)[-1800:]
             raise RuntimeError(f'Upstream test failed (exit {returncode}); report not saved or incomplete:\n{tail_text}')
         report = max(reports, key=lambda p: p.stat().st_mtime_ns)
         result = parse_report(report.read_text(encoding='utf-8-sig'), root, report)
         if not result.candidates:
-            report_text = report.read_text(encoding='utf-8-sig')
-            configs = re.findall(r'^Config:\s+(.+?)\s+\(Type:', report_text, re.M)
-            output_tail = '\n'.join(tail)[-3500:]
-            raise RuntimeError(
-                'Штатный тестер завершился, но НЕ записал статистику DPI/HTTP-проверок.\n'
-                f'Отчёт: {report}\n'
-                f'Конфигураций упомянуто: {len(configs)}; '
-                f'строк с результатами: {len(result.candidates)}.\n'
-                'Это не означает, что все стратегии нерабочие. '
-                'Автоприменение отменено.\n'
-                'Последние сообщения штатного тестера:\n' +
-                (output_tail or '(нет вывода)')
-            )
+            raise RuntimeError('Report has no analyzable candidates')
         if cancellation is not None and cancellation.event.is_set():
             raise TestCancelled('Проверка отменена пользователем')
         return result
@@ -308,6 +297,140 @@ def main() -> None:
             print('Selected BAT launched, PID:', process.pid)
     except Exception as exc:
         parser.exit(1, 'F-03 error: ' + str(exc) + '\n')
+
+# --- F-03: two-pass confirmation of three leading strategies ---
+MAX_RATE_DRIFT = 0.15  # 15 percentage points, provisional safety threshold
+
+
+@dataclass(frozen=True)
+class Comparison:
+    name: str
+    first: Candidate
+    second: Candidate
+    first_rate: float
+    second_rate: float
+    delta_pp: float
+    unstable: bool
+
+
+@dataclass(frozen=True)
+class VerifiedSelection:
+    # Keep Selection-compatible attributes for existing GUI code.
+    best: Path | None
+    candidates: tuple[Candidate, ...]
+    report: Path | None
+    first: Selection
+    second: Selection | None
+    comparisons: tuple[Comparison, ...]
+    safe_auto_apply: bool
+    warning: str
+
+
+def _check_total(candidate: Candidate) -> int:
+    return candidate.ok + candidate.errors + candidate.unsupported + candidate.blocked
+
+
+def _ok_rate(candidate: Candidate) -> float:
+    total = _check_total(candidate)
+    return candidate.ok / total if total else 0.0
+
+
+def analyze_stability(first: Selection, second: Selection | None,
+                      *, max_drift: float = MAX_RATE_DRIFT,
+                      expected_names: tuple[str, ...] | None = None) -> VerifiedSelection:
+    """Fail closed if a recheck is missing, contradictory, or materially changed."""
+    if expected_names is None:
+        ranked = sorted(first.candidates, key=lambda c: (-c.ok, c.errors, c.name.casefold()))
+        expected_names = tuple(dict.fromkeys(
+            ([first.best.name] if first.best else []) + [c.name for c in ranked]
+        ))[:3]
+    if first.best is None or second is None:
+        return VerifiedSelection(first.best, first.candidates, first.report,
+                                 first, second, (), False,
+                                 'Нет победителя или повторный тест не завершён')
+    original = {c.name: c for c in first.candidates}
+    repeated = {c.name: c for c in second.candidates}
+    warnings = []
+    comparisons = []
+    if len(expected_names) != 3:
+        warnings.append('Недостаточно стратегий для проверки ТОП-3')
+    if len(set(expected_names)) != len(expected_names):
+        warnings.append('Повторный тест содержит повторяющиеся имена стратегий')
+    for name in expected_names:
+        a, b = original.get(name), repeated.get(name)
+        if a is None or b is None or _check_total(a) == 0 or _check_total(b) == 0:
+            warnings.append(f'Нет сопоставимых результатов: {name}')
+            continue
+        if _check_total(a) != _check_total(b):
+            warnings.append(f'{name}: разное количество проверок ({_check_total(a)} / {_check_total(b)})')
+        delta_pp = (_ok_rate(b) - _ok_rate(a)) * 100.0
+        unstable = abs(delta_pp) >= max_drift * 100
+        comparisons.append(Comparison(name, a, b, _ok_rate(a), _ok_rate(b), delta_pp, unstable))
+        if unstable:
+            warnings.append(f'{name}: изменение OK на {delta_pp:+.1f} п.п.')
+    if len(comparisons) != len(expected_names):
+        warnings.append('Не все три стратегии проверены повторно')
+    if second.best is None or second.best.name != first.best.name:
+        warnings.append('Победитель изменился после повторного теста')
+    safe = not warnings and len(comparisons) == 3
+    return VerifiedSelection(first.best, first.candidates, first.report,
+                             first, second, tuple(comparisons), safe,
+                             '; '.join(warnings) if warnings else 'Повторная проверка подтверждена')
+
+
+def choose_best_verified(root: str | Path, *, test_type: str = 'dpi',
+                         run_mode: str = 'all', selected_names: tuple[str, ...] = (),
+                         timeout: int = 1800,
+                         cancellation: TestCancellation | None = None,
+                         progress: Callable[[str], None] | None = None) -> VerifiedSelection:
+    """First pass as usual; second pass retests TOP-3 via upstream PowerShell tester."""
+    def emit(line: str):
+        if progress is not None:
+            progress(line)
+
+    emit('[F03] Этап 1/2: проверяем стратегии')
+    first = choose_best(root, test_type=test_type, run_mode=run_mode,
+                        selected_names=selected_names, timeout=timeout,
+                        cancellation=cancellation, progress=progress)
+    if first.best is None:
+        result = analyze_stability(first, None)
+        emit('[F03] ' + result.warning)
+        return result
+
+    ranked = sorted(first.candidates, key=lambda c: (-c.ok, c.errors, c.name.casefold()))
+    names = tuple(dict.fromkeys([first.best.name] + [c.name for c in ranked]))[:3]
+    if len(names) < 3:
+        result = analyze_stability(first, None, expected_names=names)
+        emit('[F03] ' + result.warning + '; автоприменение запрещено')
+        return result
+
+    if cancellation is not None and cancellation.event.is_set():
+        raise TestCancelled('Проверка отменена до второго этапа')
+    emit('[F03] Этап 2/2: повторяем ' + ', '.join(names))
+    # Avoid same-second upstream report name collision and allow cancellation.
+    if cancellation is not None:
+        if cancellation.event.wait(1.2):
+            raise TestCancelled('Проверка отменена до второго этапа')
+    else:
+        time.sleep(1.2)
+    second = choose_best(root, test_type=test_type, run_mode='select',
+                         selected_names=names, timeout=timeout,
+                         cancellation=cancellation, progress=progress)
+    result = analyze_stability(first, second, expected_names=names)
+    if run_mode != 'all':
+        from dataclasses import replace
+        result = replace(result, safe_auto_apply=False,
+                         warning=result.warning + '; неполный первый этап')
+    for check in result.comparisons:
+        emit(f'[F03] {check.name}: OK {check.first.ok} -> {check.second.ok}; '
+             f'FAIL {check.first.errors} -> {check.second.errors}; '
+             f'BLOCKED {check.first.blocked} -> {check.second.blocked}; '
+             f'delta OK {check.delta_pp:+.1f} п.п.' +
+             (' [НЕСТАБИЛЬНО]' if check.unstable else ''))
+    emit('[F03] ' + ('Автоприменение разрешено: результаты подтверждены'
+                     if result.safe_auto_apply
+                     else 'Автоприменение ЗАПРЕЩЕНО: ' + result.warning))
+    return result
 
 
 if __name__ == '__main__':

@@ -1,4 +1,4 @@
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version='1.0' encoding='UTF-8'?>
 <ui version="4.0">
   <class>MainWindow</class>
   <widget class="QMainWindow" name="MainWindow">
@@ -319,7 +319,7 @@
                           </property>
                         </widget>
                       </item>
-                      <item>
+                      <item><widget class="QPushButton" name="btnLoadStrategyReport"><property name="text"><string>Загрузить результат проверки</string></property><property name="toolTip"><string>Открыть сохранённый отчёт Flowseal (TXT) без повторного тестирования</string></property></widget></item><item>
                         <widget class="QPushButton" name="btnStopStrategy">
                           <property name="text">
                             <string>Стоп</string>
@@ -343,7 +343,7 @@
                   </widget>
                 </item>
                 <item>
-                  <widget class="QComboBox" name="cmbStrategies" />
+                  <widget class="QComboBox" name="cmbStrategies"/>
                 </item>
                 <item>
                   <widget class="QProgressBar" name="progressStrategy">
@@ -591,6 +591,6 @@
       </layout>
     </widget>
   </widget>
-  <resources />
-  <connections />
+  <resources/>
+  <connections/>
 </ui>
